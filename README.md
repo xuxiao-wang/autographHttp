@@ -51,7 +51,7 @@
 
 
 ## 导包
-使用时复制jar包到libs文件夹即可<br>
+使用时复制[jar包](https://github.com/TyrionWang/autographHttp/raw/master/AutographHttp.jar)到libs文件夹即可<br>
 网络请求工具包为okhttp3，请按okhttp3导包规范导包
 
 ## 备注
