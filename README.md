@@ -55,4 +55,4 @@
 网络请求工具包为okhttp3，请按okhttp3导包规范导包
 
 ## 备注
-源码为modules工程，修改源码需要添加到工程的model列表中
+源码为modules工程
