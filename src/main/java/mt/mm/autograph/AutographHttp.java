@@ -134,7 +134,7 @@ public class AutographHttp {
         //请求参数
         public Builder addParameter(Map<String, String> map) {
             if (map != null) {
-                this.map = map;
+                this.map.putAll(map);
             }
             return this;
         }

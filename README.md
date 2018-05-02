@@ -23,7 +23,7 @@
 				.changeHttp(String http) // 默认使用初始化时的基地址，如果传，则使用新的，仅在本次有效
                 .with(String url) // 需要访问的地址，必传，例如"http:www.baidu.com/404/" "404/"这部分。如果传完整地址，则取完整地址
                 .addParameter(Map map) // 参数集合，建议使用线程安全的ConcurrentHashMap 
-				.add(String key,Object obj) // 单个参数键值对，与addParameter(map)使用有先后顺序，如果先使用add在使用appParamter则先使用的add无效
+				.add(String key,Object obj) // 单个参数键值对
                 .requestMethod(RequestMethod) // 请求方式，默认get，RequestMethod枚举类型有两个，GET和POST
 				//.get() // get请求
 				//.post() // post请求
