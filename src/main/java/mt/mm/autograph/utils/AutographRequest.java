@@ -2,9 +2,12 @@ package mt.mm.autograph.utils;
 
 import android.app.Activity;
 import android.text.TextUtils;
+import android.util.Log;
 import android.util.Patterns;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
@@ -29,7 +32,7 @@ public class AutographRequest {
     private Map<String, String> map = null;        //请求参数
     private static String URL = null;       //基地址
     private Activity activity;
-    private ArrayList<String> parameters;   //排序参数
+//    private ArrayList<String> parameters;   //排序参数
     private String http = null;
 
     public AutographRequest(String http, String path, Map<String, String> map, Activity activity) {
@@ -38,24 +41,24 @@ public class AutographRequest {
         this.map = map;
         this.path = path;
         this.activity = activity;
-        /**
-         * 将需要排序的参数map集合拼装后添加到list集合
-         * */
-        parameters = new ArrayList<>();
-
-        synchronized (AutographRequest.class) {
-            Set set = map.keySet();
-
-            StringBuffer sb = new StringBuffer();
-            for (Iterator ite = set.iterator(); ite.hasNext(); ) {
-                String key = (String) ite.next();
-                String value = map.get(key);
-                sb.delete(0, sb.length());
-                sb.append("&").append(key).append("=").append(value);
-                parameters.add(sb.toString());
-            }
-
-        }
+//        /**
+//         * 将需要排序的参数map集合拼装后添加到list集合
+//         * */
+//        parameters = new ArrayList<>();
+//
+//        synchronized (AutographRequest.class) {
+//            Set set = map.keySet();
+//
+//            StringBuffer sb = new StringBuffer();
+//            for (Iterator ite = set.iterator(); ite.hasNext(); ) {
+//                String key = (String) ite.next();
+//                String value = map.get(key);
+//                sb.delete(0, sb.length());
+//                sb.append("&").append(key).append("=").append(value);
+//                parameters.add(sb.toString());
+//            }
+//
+//        }
     }
 
 
@@ -68,7 +71,9 @@ public class AutographRequest {
     public synchronized void get(final ResponseCallback responseCallback, final FailureCallback failureCallback, final String autographKey) {
 
         //返回排序后的地址
-        String getUrl = Url.getUrl(parameters, autographKey);
+//        String getUrl = Url.getUrl(parameters, autographKey);
+        String getUrl = Url.getUrl(map, autographKey);
+
         StringBuffer sb = new StringBuffer();
         sb.delete(0, sb.length());
 
@@ -146,7 +151,8 @@ public class AutographRequest {
     //返回post请求数据
     public synchronized void post(final ResponseCallback responseCallback, final FailureCallback failureCallback, String autographKey) {
         //返回排序后的地址
-        String[] strs = Url.postUrl(parameters, autographKey);
+//        String[] strs = Url.postUrl(parameters, autographKey);
+        String[] strs = Url.postUrl(map, autographKey);
 
         String url;
 
@@ -187,19 +193,49 @@ public class AutographRequest {
         Call call = AutographHttp.getOkHttpClient().newCall(request);
         call.enqueue(new Callback() {
             @Override
-            public void onFailure(Call call, IOException e) {
-                if (failureCallback != null) {
-                    failureCallback.onFailure(call, e.toString());
+            public void onFailure(final Call call, final IOException e) {
+
+                if (activity == null) {
+                    if (failureCallback != null) {
+                        failureCallback.onFailure(call, e.toString());
+                    }
+                } else {
+                    activity.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (failureCallback != null) {
+                                failureCallback.onFailure(call, e.toString());
+                            }
+                        }
+                    });
                 }
+
+
+                HttpLog.e(e.toString());
+
+
             }
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
 
-                if (responseCallback != null) {
-                    responseCallback.onResponse(response.body().string());
-                }
+                final String str = response.body().string();
 
+
+                if (activity == null) {
+                    if (responseCallback != null) {
+                        responseCallback.onResponse(str);
+                    }
+                } else {
+                    activity.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (responseCallback != null) {
+                                responseCallback.onResponse(str);
+                            }
+                        }
+                    });
+                }
             }
 
         });
