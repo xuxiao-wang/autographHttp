@@ -1,10 +1,16 @@
 package mt.mm.autograph.utils;
 
 import android.text.TextUtils;
+import android.util.Log;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 /**
  * Created by wxx on 2016/9/29.
@@ -32,25 +38,41 @@ public class Url {
         return sb.toString();
     }
 
-    /**
-     * @param arrayList 需要排序的字符串
-     *                  <p>
-     *                  get请求        字符串排序,返回排序后的Url
-     */
-    protected static String getUrl(ArrayList<String> arrayList, String key) {
-
+    protected static String getUrl(Map<String, String> map, String key) {
         String time = time();
         String random = str();
 
-        String md5 = sort(arrayList, key, time, random);
+        String md5 = getMd5(map, key, time, random);
 
-        arrayList.add("&sign=" + md5);
-        arrayList.add("&signTime=" + time);
-        arrayList.add("&signStr=" + random);
-        Collections.sort(arrayList);
+        //初始参数集合
+        ArrayList<String> list = new ArrayList<>();
+
+        Set set = map.keySet();
+
+        StringBuffer sb = new StringBuffer();
+        for (Iterator ite = set.iterator(); ite.hasNext(); ) {
+            String mKey = (String) ite.next();
+            String mValue = map.get(mKey);
+
+            sb.delete(0, sb.length());
+
+            if (!TextUtils.isEmpty(mKey)) {
+                sb.append("&").append(mKey).append("=");
+                try {
+                    sb.append(URLEncoder.encode(mValue, "utf-8"));
+                } catch (UnsupportedEncodingException e) {
+                    sb.append(mValue);
+                }
+            }
+            list.add(sb.toString());
+        }
+
+        list.add("&sign=" + md5);
+        list.add("&signTime=" + time);
+        list.add("&signStr=" + random);
 
         StringBuffer buffer = new StringBuffer();
-        for (String str : arrayList) {
+        for (String str : list) {
             buffer.append(str);
         }
         String string = buffer.toString();
@@ -59,44 +81,38 @@ public class Url {
         return string;
     }
 
-    /**
-     * @param arrayList 需要排序的字符串数组
-     *                  <p>
-     *                  post请求        字符串排序,返回加密字符串，随机数，时间戳
-     */
-    protected static String[] postUrl(ArrayList<String> arrayList, String key) {
+
+    protected static String[] postUrl(Map<String, String> map, String key) {
 
         String time = time();
         String random = str();
 
-        String md5 = sort(arrayList, key, time, random);
+        String md5 = getMd5(map, key, time, random);
 
         String[] strings = {md5, random, time};
         return strings;
     }
 
-    private static String sort(ArrayList<String> arrayList, String key, String time, String random) {
+    private static String getMd5(Map<String, String> map, String key, String time, String random) {
 
         //初始参数集合
         ArrayList<String> list = new ArrayList<>();
 
+        Set set = map.keySet();
+
+        StringBuffer sb = new StringBuffer();
+        for (Iterator ite = set.iterator(); ite.hasNext(); ) {
+            String mKey = (String) ite.next();
+            String mValue = map.get(mKey);
+            if (!(TextUtils.isEmpty(mValue) || TextUtils.isEmpty(mKey))) { //过滤当键值为空的情况
+                sb.delete(0, sb.length());
+                sb.append("&").append(mKey).append("=").append(mValue);
+                list.add(sb.toString());
+            }
+        }
+
         list.add("&signTime=" + time);
         list.add("&signStr=" + random);
-
-        for (int i = 0; i < arrayList.size(); i++) {
-
-            String[] split = arrayList.get(i).split("=");
-            try {
-                if (TextUtils.isEmpty(split[1])) {
-                    continue;
-                }
-            } catch (Exception e) {
-                continue;
-            }
-
-            list.add(arrayList.get(i));
-
-        }
 
         Collections.sort(list);
 
@@ -111,5 +127,4 @@ public class Url {
 
         return MD5.getMD5(buffer.toString().substring(1));
     }
-
 }
